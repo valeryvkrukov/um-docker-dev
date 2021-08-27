@@ -3,7 +3,7 @@ version: "3.9"
 services:
   php-fpm:
     build:
-      context: api
+      context: ./api
     restart: unless-stopped
     depends_on:
       - nginx
@@ -54,8 +54,12 @@ services:
       - target: 5432
         published: 5432
         protocol: tcp
+    networks:
+      - app-network
   redis:
     image: redis:latest
+    networks:
+      - app-network
 
 volumes:
   db_data:
