@@ -3,6 +3,7 @@ FROM php:8.0-fpm
 WORKDIR /var/www
 
 RUN apt-get update && apt-get install -y \
+    acl \
     build-essential \
     libpng-dev \
     libjpeg62-turbo-dev \
@@ -12,7 +13,6 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     zlib1g-dev \
     jpegoptim optipng pngquant gifsicle \
-    #vim \
     unzip \
     git \
     libpq-dev \
@@ -23,7 +23,6 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN docker-php-ext-configure zip
 RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring zip exif pcntl
 RUN docker-php-ext-configure gd
-#--with-gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ --with-png-dir=/usr/include/
 RUN docker-php-ext-install gd
 
 RUN groupadd -g 1000 www
@@ -64,4 +63,9 @@ COPY --chown=www:www . /var/www
 ENV SYMFONY_PHPUNIT_VERSION=9
 
 EXPOSE 9000
+
+COPY docker/entrypoint.sh /usr/local/bin/docker-entrypoint
+RUN chmod +x /usr/local/bin/docker-entrypoint
+
+ENTRYPOINT ["docker-entrypoint"]
 CMD ["php-fpm"]

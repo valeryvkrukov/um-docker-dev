@@ -22,7 +22,7 @@ services:
     restart: unless-stopped
     working_dir: /var/www
     volumes:
-      - ./api:/var/www
+      - ./api/public:/var/www/public:ro
       - ./nginx/conf.d/:/etc/nginx/conf.d/
     ports:
       - 8080:80
@@ -50,6 +50,10 @@ services:
       - POSTGRES_USER=api-platform
     volumes:
       - db_data:/var/lib/postgresql/data:rw
+    ports:
+      - target: 5432
+        published: 5432
+        protocol: tcp
   redis:
     image: redis:latest
 
