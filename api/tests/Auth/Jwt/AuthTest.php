@@ -18,10 +18,10 @@ class AuthTest extends ApiTestCase
      */
     public function createAuthenticatedClient(string $username = 'user', string $password = 'password'): \ApiPlatform\Core\Bridge\Symfony\Bundle\Test\Client
     {
-        $client = static::createClient();
+        $client = static::createClient([], ['base_uri' => 'http://api.um.mos.loc']);
         $client->request(
             'POST',
-            '/login_check',
+            '/login',
             [],
             [],
             ['CONTENT_TYPE' => 'application/json'],
