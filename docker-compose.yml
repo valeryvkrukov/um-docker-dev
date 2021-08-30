@@ -6,21 +6,28 @@ services:
       context: ./api
     restart: unless-stopped
     depends_on:
-      - nginx
       - database
     working_dir: /var/www
     environment:
+      APP_ENV: dev
       MERCURE_URL: http://localhost
       MERCURE_PUBLIC_URL: http://localhost
-      MERCURE_JWT_SECRET: S3cr3t
+      MERCURE_JWT_SECRET: 8gQ7}q\q8DE%Z>nv
+      #JWT_SECRET_KEY: 2m2R7}q\qGq38gQ
     volumes:
-      - ./api:/var/www
+      - ./api:/var/www:rw,cached
+      - ./api/docker/conf.d/api-platform.dev.ini:/usr/local/etc/php/conf.d/api-platform.ini
+      #- ./api:/var/www
     networks:
       - app-network
   nginx:
     image: nginx:alpine
     restart: unless-stopped
     working_dir: /var/www
+    depends_on:
+      - php-fpm
+      - site
+      - admin
     volumes:
       - ./api/public:/var/www/public:ro
       - ./nginx/conf.d/:/etc/nginx/conf.d/
@@ -44,10 +51,11 @@ services:
       - app-network
   database:
     image: postgres:13-alpine
+    container_name: "database"
     environment:
-      - POSTGRES_DB=api
-      - POSTGRES_PASSWORD=S3cr3t
-      - POSTGRES_USER=api-platform
+      POSTGRES_DB: um_api
+      POSTGRES_PASSWORD: VQJ2m2RGq3Kw
+      POSTGRES_USER: um_api
     volumes:
       - db_data:/var/lib/postgresql/data:rw
     ports:
@@ -57,12 +65,16 @@ services:
     networks:
       - app-network
   redis:
-    image: redis:latest
+    build:
+      context: ./redis
+    volumes:
+      - redis_data:/var/lib/redis/data
     networks:
       - app-network
 
 volumes:
   db_data:
+  redis_data:
 
 networks:
   app-network:

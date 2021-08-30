@@ -7,11 +7,11 @@ if [ "${1#-}" != "$1" ]; then
 fi
 
 if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
-	#PHP_INI_RECOMMENDED="$PHP_INI_DIR/php.ini-production"
-	#if [ "$APP_ENV" != 'prod' ]; then
-	#	PHP_INI_RECOMMENDED="$PHP_INI_DIR/php.ini-development"
-	#fi
-	#ln -sf "$PHP_INI_RECOMMENDED" "$PHP_INI_DIR/php.ini"
+	PHP_INI_RECOMMENDED="$PHP_INI_DIR/php.ini-production"
+	if [ "$APP_ENV" != 'prod' ]; then
+		PHP_INI_RECOMMENDED="$PHP_INI_DIR/php.ini-development"
+	fi
+	ln -sf "$PHP_INI_RECOMMENDED" "$PHP_INI_DIR/php.ini"
 
 	mkdir -p var/cache var/log
 	setfacl -R -m u:www-data:rwX -m u:"$(whoami)":rwX var
@@ -45,6 +45,10 @@ if [ "$1" = 'php-fpm' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 
 		if ls -A migrations/*.php >/dev/null 2>&1; then
 			php bin/console doctrine:migrations:migrate --no-interaction
+		fi
+
+		if [ "$APP_ENV" != 'prod' ]; then
+		  php bin/console lexik:jwt:generate-keypair --overwrite --no-interaction
 		fi
 	fi
 fi

@@ -1,64 +1,84 @@
-FROM php:8.0-fpm
+FROM php:8.0-fpm-alpine
 
-WORKDIR /var/www
+RUN apk add --no-cache \
+		acl \
+        openssl \
+		fcgi \
+		file \
+		gettext \
+		git \
+		gnu-libiconv \
+	;
 
-RUN apt-get update && apt-get install -y \
-    acl \
-    build-essential \
-    libpng-dev \
-    libjpeg62-turbo-dev \
-    libfreetype6-dev \
-    locales \
-    zip \
-    libzip-dev \
-    zlib1g-dev \
-    jpegoptim optipng pngquant gifsicle \
-    unzip \
-    git \
-    libpq-dev \
-    libonig-dev \
-    curl
+ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so
+ARG APCU_VERSION=5.1.19
 
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
-RUN docker-php-ext-configure zip
-RUN docker-php-ext-install pdo pdo_pgsql pgsql mbstring zip exif pcntl
-RUN docker-php-ext-configure gd
-RUN docker-php-ext-install gd
-
-RUN groupadd -g 1000 www
-RUN useradd -u 1000 -ms /bin/bash -g www www
+RUN set -eux; \
+	apk add --no-cache --virtual .build-deps \
+		$PHPIZE_DEPS \
+		icu-dev \
+		libzip-dev \
+		postgresql-dev \
+		zlib-dev \
+	; \
+	\
+	docker-php-ext-configure zip; \
+	docker-php-ext-install -j$(nproc) \
+		intl \
+		pdo_pgsql \
+		zip \
+	; \
+	pecl install \
+		apcu-${APCU_VERSION} \
+	; \
+	pecl clear-cache; \
+	docker-php-ext-enable \
+		apcu \
+		opcache \
+	; \
+	\
+	runDeps="$( \
+		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local/lib/php/extensions \
+			| tr ',' '\n' \
+			| sort -u \
+			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
+	)"; \
+	apk add --no-cache --virtual .api-phpexts-rundeps $runDeps; \
+	\
+	apk del .build-deps
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+RUN ln -s $PHP_INI_DIR/php.ini-production $PHP_INI_DIR/php.ini
+COPY docker/conf.d/api-platform.prod.ini $PHP_INI_DIR/conf.d/api-platform.ini
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 ENV PATH="${PATH}:/root/.composer/vendor/bin"
 
-COPY composer.lock composer.json /var/www/
+WORKDIR /var/www
+
+ARG APP_ENV=prod
+
+COPY composer.json composer.lock symfony.lock ./
 
 RUN set -eux; \
-    composer install --prefer-dist --no-dev --no-scripts --no-progress; \
-    composer clear-cache
+	composer install --prefer-dist --no-scripts --no-progress; \
+	composer clear-cache;
 
-#COPY . /var/www
-
-COPY .env /var/www/
-COPY bin /var/www/bin/
-COPY config /var/www/config/
-COPY migrations /var/www/migrations/
-COPY public /var/www/public/
-COPY src /var/www/src/
-COPY templates /var/www/templates/
+COPY .env ./
+COPY bin bin/
+COPY config config/
+COPY migrations migrations/
+COPY public public/
+COPY src src/
+COPY templates templates/
 
 RUN set -eux; \
-    mkdir -p var/cache var/log; \
-    composer dump-autoload --classmap-authoritative --no-dev; \
-    composer dump-env prod; \
-    composer run-script --no-dev post-install-cmd; \
-    chmod +x bin/console; sync
-
-COPY --chown=www:www . /var/www
-
-#USER www
+	mkdir -p var/cache var/log; \
+	composer dump-autoload --classmap-authoritative; \
+	composer dump-env prod; \
+	composer run-script post-install-cmd; \
+	chmod +x bin/console; sync;
 
 ENV SYMFONY_PHPUNIT_VERSION=9
 
