@@ -2,8 +2,12 @@
 
 namespace App\Entity;
 
+use App\Repository\ArchitectRepository;
 use ApiPlatform\Core\Annotation\ApiResource;
+use App\Behavior\TranslatableTrait;
 use Doctrine\ORM\Mapping as ORM;
+use Knp\DoctrineBehaviors\Contract\Entity\TranslatableInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -11,28 +15,20 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @ORM\Table(name="`architects`")
  */
 #[ApiResource]
-class Architect
+class Architect implements TranslatableInterface
 {
+    use TranslatableTrait;
+
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @Groups({"read"})
      */
     private ?int $id = null;
 
     /**
-     * @ORM\Column(type="string", unique=true)
-     * @Assert\NotBlank
-     */
-    private string $name;
-
-    /**
-     * @ORM\Column(type="text")
-     * @Assert\NotBlank
-     */
-    private string $description;
-
-    /**
+     * @Groups({"read", "write"})
      * @ORM\Column(type="string", unique=true)
      * @Assert\NotBlank
      */
@@ -44,38 +40,6 @@ class Architect
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    /**
-     * @param string $name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
-    }
-
-    /**
-     * @return string
-     */
-    public function getDescription(): string
-    {
-        return $this->description;
-    }
-
-    /**
-     * @param string $description
-     */
-    public function setDescription(string $description): void
-    {
-        $this->description = $description;
     }
 
     /**
