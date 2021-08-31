@@ -16,6 +16,9 @@
     "api-platform/schema-generator": {
         "version": "v3.0.0"
     },
+    "brick/math": {
+        "version": "0.9.3"
+    },
     "composer/package-versions-deprecated": {
         "version": "1.11.99.2"
     },
@@ -165,6 +168,9 @@
     "guzzlehttp/psr7": {
         "version": "1.8.2"
     },
+    "knplabs/doctrine-behaviors": {
+        "version": "2.3.3"
+    },
     "laminas/laminas-code": {
         "version": "4.3.0"
     },
@@ -231,6 +237,9 @@
         "files": [
             "config/packages/nelmio_cors.yaml"
         ]
+    },
+    "nette/utils": {
+        "version": "v3.2.3"
     },
     "nikic/php-parser": {
         "version": "v4.10.5"
@@ -329,6 +338,12 @@
     },
     "ralouphie/getallheaders": {
         "version": "3.0.3"
+    },
+    "ramsey/collection": {
+        "version": "1.2.1"
+    },
+    "ramsey/uuid": {
+        "version": "4.2.1"
     },
     "sebastian/cli-parser": {
         "version": "1.0.1"

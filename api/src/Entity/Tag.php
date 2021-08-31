@@ -2,31 +2,36 @@
 
 namespace App\Entity;
 
+use App\Behavior\TranslatableTrait;
+use App\Repository\TagRepository;
 use ApiPlatform\Core\Annotation\ApiResource;
 use Doctrine\ORM\Mapping as ORM;
+use Knp\DoctrineBehaviors\Contract\Entity\TranslatableInterface;
+use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass=TagRepository::class)
  * @ORM\Table(name="`tags`")
  */
-#[ApiResource]
-class Tag
+#[ApiResource(
+    denormalizationContext: ['groups' => ['write']],
+    normalizationContext: ['groups' => ['read']],
+)]
+class Tag implements TranslatableInterface
 {
+    use TranslatableTrait;
+
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @Groups({"read"})
      */
     private ?int $id = null;
 
     /**
-     * @ORM\Column(type="string", unique=true)
-     * @Assert\NotBlank
-     */
-    private string $name;
-
-    /**
+     * @Groups({"read", "write"})
      * @ORM\Column(type="string", unique=true)
      * @Assert\Url
      * @Assert\NotBlank
@@ -39,22 +44,6 @@ class Tag
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    /**
-     * @return string
-     */
-    public function getName(): string
-    {
-        return $this->name;
-    }
-
-    /**
-     * @param string $name
-     */
-    public function setName(string $name): void
-    {
-        $this->name = $name;
     }
 
     /**
